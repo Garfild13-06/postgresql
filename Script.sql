@@ -2,7 +2,7 @@ create table public.albums (
 	id serial4 not null,
 	album_name varchar(200) not null,
 	"year" int4 null,
-	constraint albums_check check ((year > 2000)),
+	constraint albums_check check ((year > 1980)),
 	constraint albums_pkey primary key (id)
 );
 
@@ -12,10 +12,11 @@ create table if not exists public.singers (
     constraint singers_pkey primary key (id)
 );
 
-create table if not exists public.styles (
-    id serial4 NOT NULL,
-    style_name varchar(200) NOT NULL,
-    CONSTRAINT styles_pkey PRIMARY KEY (id)
+CREATE TABLE public.styles (
+	id serial4 NOT NULL,
+	style_name varchar(200) NOT NULL,
+	CONSTRAINT styles_pkey PRIMARY KEY (id),
+	CONSTRAINT styles_un UNIQUE (style_name)
 );
 
 create table if not exists public.singers_albums (
@@ -48,6 +49,7 @@ create table if not exists public.colections (
     collection_name varchar(200) not null,
     "year" int4 null,
     song_id int4 null,
+	constraint colections_check check ((year > 1980)),
     constraint colections_pkey primary key (id),
     constraint colections_song_id_fkey foreign key (song_id) references public.songs(id)
 );
