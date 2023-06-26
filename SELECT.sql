@@ -13,7 +13,9 @@ SELECT
   s.song_name,
   s.duration
 FROM songs s
-WHERE s.duration >= (60 * 3.5);
+WHERE s.duration >= (
+60 * 3.5
+);
 
 -- Названия сборников, вышедших в период с 2018 по 2020 год включительно.
 SELECT
@@ -25,21 +27,23 @@ WHERE c."year" BETWEEN 2018 AND 2020;
 SELECT
   *
 FROM singers s
-WHERE strpos(s.singer_name, ' ') = 0;
+WHERE strpos(
+s.singer_name,
+' '
+) = 0;
 
 -- Название треков, которые содержат слово «мой» или «my».
 SELECT
   *
 FROM songs s
-WHERE s.song_name ILIKE ' my '
-OR s.song_name ILIKE ' my'
-OR s.song_name ILIKE 'my '
+WHERE s.song_name ILIKE '% my %'
+OR s.song_name ILIKE '% my'
+OR s.song_name ILIKE 'my %'
 OR s.song_name ILIKE 'my'
-OR s.song_name ILIKE ' мой '
-OR s.song_name ILIKE ' мой'
-OR s.song_name ILIKE 'мой '
+OR s.song_name ILIKE '% мой %'
+OR s.song_name ILIKE '% мой'
+OR s.song_name ILIKE 'мой %'
 OR s.song_name ILIKE 'мой';
-
 
 -- Задание 3
 -- Количество исполнителей в каждом жанре. На основе таблицы-связки.
@@ -62,7 +66,10 @@ WHERE a.year BETWEEN 2019 AND 2020;
 -- Средняя продолжительность треков по каждому альбому.
 SELECT
   a.album_name,
-  round(AVG(s.duration), 2) AS "Средняя продолжительность в сек"
+  round(
+  AVG(s.duration),
+  2
+  ) AS "Средняя продолжительность в сек"
 FROM albums a
   LEFT JOIN songs s
     ON a.id = s.album_id
@@ -97,19 +104,22 @@ FROM songs_colections sc
     ON a.id = sa.album_id
   LEFT JOIN singers s2
     ON sa.singer_id = s2.id
-WHERE s2.singer_name = 'Ария'
+WHERE s2.singer_name = 'Ария';
 
-
--- Задание 4(необязательное)
-
+-- Задание 4(необязательное);
 -- Названия альбомов, в которых присутствуют исполнители более чем одного жанра
-SELECT
-  a.album_name
-FROM singers_albums sa
-  LEFT JOIN albums a
-    ON sa.album_id = a.id
-GROUP BY a.album_name
-HAVING COUNT(sa.singer_id) > 1;
+SELECT DISTINCT
+  a.album_name /* Получаем ТОЛЬКО уникальные имена альбомов. Другие данные в выводе не нужны */
+FROM albums a /* Из таблицы альбомов */
+  JOIN singers_albums sa
+    ON a.id = sa.album_id  /* Объединяем альбомы с промежуточной таблицей между исполнителями */
+  JOIN singers s
+    ON sa.singer_id = s.id  /* Объединяем промежуточную таблицу с исполнителями */
+  JOIN styles_singers ss
+    ON s.id = ss.singer_id  /* Объединяем исполнителей с промежуточной таблицей между жанрами */
+GROUP BY a.album_name,
+         ss.singer_id  /* Группируем по именам альбомов и айди исполнителей из промежуточной таблицы между жанрами и исполнителями */
+HAVING COUNT(ss.style_id) > 1; /* Где количество id жанров из промежуточной таблицы больше 1 */
 
 -- Наименования треков, которые не входят в сборники.
 SELECT
@@ -133,7 +143,7 @@ WHERE s2.duration = (SELECT
     MIN(duration)
   FROM songs s3
     JOIN singers_albums sa2
-      ON s3.album_id = sa2.album_id)
+      ON s3.album_id = sa2.album_id);
 
 -- Названия альбомов, содержащих наименьшее количество треков
 SELECT
