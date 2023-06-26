@@ -13,7 +13,7 @@ SELECT
   s.song_name,
   s.duration
 FROM songs s
-WHERE s.duration > (60 * 3.5);
+WHERE s.duration >= (60 * 3.5);
 
 -- Названия сборников, вышедших в период с 2018 по 2020 год включительно.
 SELECT
@@ -31,8 +31,14 @@ WHERE strpos(s.singer_name, ' ') = 0;
 SELECT
   *
 FROM songs s
-WHERE s.song_name ILIKE '%my%'
-OR s.song_name ILIKE '%мой%';
+WHERE s.song_name ILIKE ' my '
+OR s.song_name ILIKE ' my'
+OR s.song_name ILIKE 'my '
+OR s.song_name ILIKE 'my'
+OR s.song_name ILIKE ' мой '
+OR s.song_name ILIKE ' мой'
+OR s.song_name ILIKE 'мой '
+OR s.song_name ILIKE 'мой';
 
 
 -- Задание 3
@@ -47,13 +53,11 @@ GROUP BY s1.style_name;
 
 -- Количество треков, вошедших в альбомы 2019–2020 годов.
 SELECT
-  a.album_name,
-  COUNT(s.song_name) AS "Кол-во треков"
+  COUNT(s.song_name)
 FROM albums a
   LEFT JOIN songs s
     ON a.id = s.album_id
-WHERE a.year BETWEEN 2019 AND 2020
-GROUP BY a.album_name;
+WHERE a.year BETWEEN 2019 AND 2020;
 
 -- Средняя продолжительность треков по каждому альбому.
 SELECT
@@ -66,14 +70,16 @@ GROUP BY a.album_name;
 
 -- Все исполнители, которые не выпустили альбомы в 2020 году.
 SELECT
-DISTINCT
-  (s.singer_name)
-FROM singers_albums sa
-  LEFT JOIN singers s
-    ON sa.singer_id = s.id
-  LEFT JOIN albums a
-    ON sa.album_id = a.id
-WHERE a."year" <> 2020;
+  *
+FROM singers s
+WHERE id NOT IN (SELECT
+    s.id
+  FROM albums a
+    LEFT JOIN singers_albums sa
+      ON a.id = sa.album_id
+    LEFT JOIN singers s
+      ON sa.singer_id = s.id
+  WHERE a."year" = 2020);
 
 -- Названия сборников, в которых присутствует конкретный исполнитель (выберите его сами).
 SELECT
@@ -95,6 +101,16 @@ WHERE s2.singer_name = 'Ария'
 
 
 -- Задание 4(необязательное)
+
+-- Названия альбомов, в которых присутствуют исполнители более чем одного жанра
+SELECT
+  a.album_name
+FROM singers_albums sa
+  LEFT JOIN albums a
+    ON sa.album_id = a.id
+GROUP BY a.album_name
+HAVING COUNT(sa.singer_id) > 1;
+
 -- Наименования треков, которые не входят в сборники.
 SELECT
   *
@@ -105,14 +121,31 @@ WHERE sc.song_id IS NULL;
 
 -- Исполнитель или исполнители, написавшие самый короткий по продолжительности трек, — теоретически таких треков может быть несколько.
 SELECT
-  s.song_name,
-  s.duration,
-  s2.singer_name
+  s.singer_name
+FROM singers s
+  JOIN singers_albums sa
+    ON s.id = sa.singer_id
+  JOIN albums a
+    ON sa.album_id = a.id
+  JOIN songs s2
+    ON a.id = s2.album_id
+WHERE s2.duration = (SELECT
+    MIN(duration)
+  FROM songs s3
+    JOIN singers_albums sa2
+      ON s3.album_id = sa2.album_id)
+
+-- Названия альбомов, содержащих наименьшее количество треков
+SELECT
+  a.album_name
 FROM songs s
   LEFT JOIN albums a
     ON s.album_id = a.id
-  LEFT JOIN singers_albums sa
-    ON a.id = sa.album_id
-  LEFT JOIN singers s2
-    ON sa.singer_id = s2.id
-ORDER BY duration LIMIT 3
+GROUP BY a.album_name
+HAVING COUNT(s.id) = (SELECT
+    MIN(my_count)
+  FROM (SELECT
+      COUNT(s1.id) AS "my_count"
+    FROM songs s1
+    GROUP BY s1.album_id)
+  t);
